@@ -3,8 +3,6 @@ package com.anhtuan.todo.controller;
 import com.anhtuan.todo.entity.Todo;
 import com.anhtuan.todo.service.TodoService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/todos")
@@ -20,12 +19,26 @@ public class TodoController {
 
     private final TodoService todoService;
 
-    // GET /api/todos
+    // GET /api/todos              → tất cả todos
+    // GET /api/todos?listId=work  → todos theo list
     @GetMapping
     public ResponseEntity<List<Todo>> getAll(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestParam(required = false) String listId
+    ) {
+        return ResponseEntity.ok(
+            todoService.getAll(userDetails.getUsername(), listId)
+        );
+    }
+
+    // GET /api/todos/lists → danh sách listId unique của user
+    @GetMapping("/lists")
+    public ResponseEntity<List<String>> getLists(
         @AuthenticationPrincipal UserDetails userDetails
     ) {
-        return ResponseEntity.ok(todoService.getAll(userDetails.getUsername()));
+        return ResponseEntity.ok(
+            todoService.getLists(userDetails.getUsername())
+        );
     }
 
     // POST /api/todos
@@ -35,7 +48,7 @@ public class TodoController {
         @Valid @RequestBody CreateRequest body
     ) {
         return ResponseEntity.ok(
-            todoService.create(userDetails.getUsername(), body.getText())
+            todoService.create(userDetails.getUsername(), body)
         );
     }
 
@@ -47,7 +60,7 @@ public class TodoController {
         @RequestBody UpdateRequest body
     ) {
         return ResponseEntity.ok(
-            todoService.update(userDetails.getUsername(), id, body.getText(), body.getCompleted())
+            todoService.update(userDetails.getUsername(), id, body)
         );
     }
 
@@ -61,25 +74,14 @@ public class TodoController {
         return ResponseEntity.noContent().build();
     }
 
-    // ── Inner request classes (không dùng Lombok để tránh lỗi) ──
-
-    static class CreateRequest {
-        @NotBlank
-        @Size(max = 200)
-        private String text;
-
-        public String getText() { return text; }
-        public void setText(String text) { this.text = text; }
+    // DELETE /api/todos/list/{listId} → xóa tất cả todos trong 1 list
+    @DeleteMapping("/list/{listId}")
+    public ResponseEntity<Map<String, Integer>> deleteByList(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @PathVariable String listId
+    ) {
+        int count = todoService.deleteByList(userDetails.getUsername(), listId);
+        return ResponseEntity.ok(Map.of("deleted", count));
     }
 
-    static class UpdateRequest {
-        @Size(max = 200)
-        private String  text;
-        private Boolean completed;
-
-        public String  getText()      { return text; }
-        public Boolean getCompleted() { return completed; }
-        public void setText(String text)          { this.text = text; }
-        public void setCompleted(Boolean completed){ this.completed = completed; }
-    }
 }

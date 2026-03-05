@@ -1,105 +1,140 @@
 // ============================================================
-//  api.js — Service layer (mock localStorage)
-//  Khi có Spring Boot, bỏ comment phần fetch() và xóa mock
+//  api.js — connected to Spring Boot backend
 // ============================================================
 
 const BASE_URL = 'http://localhost:8080/api';
 
+// ── Helper: lấy token từ localStorage ───────────────────────
+function authHeader() {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function handleResponse(res) {
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Something went wrong');
+  }
+  // 204 No Content không có body
+  if (res.status === 204) return null;
+  return res.json();
+}
+
 // ── AUTH ────────────────────────────────────────────────────
 
 export async function login(username, password) {
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  const user  = users.find(u => u.username === username && u.password === password);
-  if (!user) throw new Error('Sai tên đăng nhập hoặc mật khẩu');
-  localStorage.setItem('currentUser', JSON.stringify(user));
-  return user;
+  const res = await fetch(`${BASE_URL}/auth/login`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ username, password }),
+  });
+  const data = await handleResponse(res);
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('currentUser', JSON.stringify({ id: data.id, username: data.username }));
+  return { id: data.id, username: data.username };
 }
 
 export async function register(username, password) {
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  if (users.find(u => u.username === username)) {
-    throw new Error('Tên đăng nhập đã tồn tại');
-  }
-  const user = { id: Date.now(), username, password };
-  users.push(user);
-  localStorage.setItem('users', JSON.stringify(users));
-  localStorage.setItem('currentUser', JSON.stringify(user));
-  return user;
+  const res = await fetch(`${BASE_URL}/auth/register`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ username, password }),
+  });
+  const data = await handleResponse(res);
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('currentUser', JSON.stringify({ id: data.id, username: data.username }));
+  return { id: data.id, username: data.username };
 }
 
-export function logout() { localStorage.removeItem('currentUser'); }
+export function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('currentUser');
+}
+
 export function getCurrentUser() {
   const u = localStorage.getItem('currentUser');
   return u ? JSON.parse(u) : null;
 }
 
 // ── LISTS ───────────────────────────────────────────────────
+// Backend lưu listId trong todos, frontend quản lý list metadata
+// trong localStorage (tên, icon, màu) — chỉ listId đồng bộ với backend
 
-function listKey(userId) { return `lists_${userId}`; }
+const LIST_META_KEY = (userId) => `list_meta_${userId}`;
 
 export async function getLists(userId) {
-  const stored = localStorage.getItem(listKey(userId));
-  if (stored) return JSON.parse(stored);
-  // Default lists
+  // Lấy metadata từ localStorage
+  const stored = localStorage.getItem(LIST_META_KEY(userId));
+  const meta   = stored ? JSON.parse(stored) : null;
+
+  if (meta) return meta;
+
+  // Lần đầu: tạo defaults
   const defaults = [
-    { id: 'personal', name: 'Personal',  icon: '👤', color: '#6366f1' },
-    { id: 'work',     name: 'Work',      icon: '💼', color: '#f59e0b' },
-    { id: 'study',    name: 'Study',     icon: '📚', color: '#10b981' },
+    { id: 'personal', name: 'Personal', icon: '👤', color: '#6366f1' },
+    { id: 'work',     name: 'Work',     icon: '💼', color: '#f59e0b' },
+    { id: 'study',    name: 'Study',    icon: '📚', color: '#10b981' },
   ];
-  localStorage.setItem(listKey(userId), JSON.stringify(defaults));
+  localStorage.setItem(LIST_META_KEY(userId), JSON.stringify(defaults));
   return defaults;
 }
 
 export async function createList(userId, name, icon = '📁', color = '#6366f1') {
-  const lists  = await getLists(userId);
+  const lists   = await getLists(userId);
   const newList = { id: `list_${Date.now()}`, name, icon, color };
   lists.push(newList);
-  localStorage.setItem(listKey(userId), JSON.stringify(lists));
+  localStorage.setItem(LIST_META_KEY(userId), JSON.stringify(lists));
   return newList;
 }
 
 export async function deleteList(userId, listId) {
+  // Xóa metadata
   let lists = await getLists(userId);
   lists = lists.filter(l => l.id !== listId);
-  localStorage.setItem(listKey(userId), JSON.stringify(lists));
-  // Xóa todos thuộc list đó
-  let todos = await getTodos(userId);
-  todos = todos.filter(t => t.listId !== listId);
-  localStorage.setItem(todoKey(userId), JSON.stringify(todos));
+  localStorage.setItem(LIST_META_KEY(userId), JSON.stringify(lists));
+
+  // Xóa tất cả todos thuộc list đó trên backend
+  await fetch(`${BASE_URL}/todos/list/${listId}`, {
+    method:  'DELETE',
+    headers: { ...authHeader() },
+  });
 }
 
 // ── TODOS ───────────────────────────────────────────────────
 
-function todoKey(userId) { return `todos_${userId}`; }
+export async function getTodos(userId, listId) {
+  const url = listId
+    ? `${BASE_URL}/todos?listId=${listId}`
+    : `${BASE_URL}/todos`;
 
-export async function getTodos(userId) {
-  return JSON.parse(localStorage.getItem(todoKey(userId)) || '[]');
+  const res = await fetch(url, {
+    headers: { ...authHeader() },
+  });
+  return handleResponse(res);
 }
 
 export async function addTodo(userId, { text, priority = 'medium', deadline = null, listId = 'personal' }) {
-  const todos   = await getTodos(userId);
-  const newTodo = {
-    id:        Date.now(),
-    text,
-    completed: false,
-    priority,             // 'high' | 'medium' | 'low'
-    deadline,             // ISO string hoặc null
-    listId,
-    createdAt: new Date().toISOString(),
-  };
-  todos.unshift(newTodo);
-  localStorage.setItem(todoKey(userId), JSON.stringify(todos));
-  return newTodo;
+  const res = await fetch(`${BASE_URL}/todos`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeader() },
+    body:    JSON.stringify({ text, priority, deadline, listId }),
+  });
+  return handleResponse(res);
 }
 
 export async function updateTodo(userId, id, changes) {
-  let todos = await getTodos(userId);
-  todos = todos.map(t => t.id === id ? { ...t, ...changes } : t);
-  localStorage.setItem(todoKey(userId), JSON.stringify(todos));
+  const res = await fetch(`${BASE_URL}/todos/${id}`, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeader() },
+    body:    JSON.stringify(changes),
+  });
+  return handleResponse(res);
 }
 
 export async function deleteTodo(userId, id) {
-  let todos = await getTodos(userId);
-  todos = todos.filter(t => t.id !== id);
-  localStorage.setItem(todoKey(userId), JSON.stringify(todos));
+  const res = await fetch(`${BASE_URL}/todos/${id}`, {
+    method:  'DELETE',
+    headers: { ...authHeader() },
+  });
+  return handleResponse(res);
 }

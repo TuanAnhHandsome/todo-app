@@ -2,6 +2,7 @@ package com.anhtuan.todo.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,7 +21,22 @@ public class Todo {
     private String text;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean completed = false;
+
+    // 'high' | 'medium' | 'low'
+    @Column(nullable = false, length = 10)
+    @Builder.Default
+    private String priority = "medium";
+
+    // Deadline (nullable)
+    @Column(name = "deadline")
+    private LocalDate deadline;
+
+    // List ID (ví dụ: 'personal', 'work', 'study', hoặc custom id)
+    @Column(name = "list_id", length = 50)
+    @Builder.Default
+    private String listId = "personal";
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
