@@ -7,6 +7,7 @@ export default function App() {
   const [user,        setUser]        = useState(() => getCurrentUser());
   const [lists,       setLists]       = useState([]);
   const [activeList,  setActiveList]  = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNewList, setShowNewList] = useState(false);
   const [newListName, setNewListName] = useState('');
 
@@ -33,7 +34,7 @@ export default function App() {
   }
 
   async function handleDeleteList(listId) {
-    if (lists.length <= 1) return; // giữ ít nhất 1 list
+    if (lists.length <= 1) return;
     await deleteList(user.id, listId);
     setLists(prev => prev.filter(l => l.id !== listId));
     if (activeList === listId) setActiveList(lists[0]?.id);
@@ -43,6 +44,12 @@ export default function App() {
     setUser(null);
     setLists([]);
     setActiveList(null);
+    setSidebarOpen(false);
+  }
+
+  function handleSelectList(id) {
+    setActiveList(id);
+    setSidebarOpen(false);
   }
 
   if (!user) return <AuthPage onAuth={u => setUser(u)} />;
@@ -52,8 +59,20 @@ export default function App() {
   return (
     <div className="app-layout">
 
-      {/* SIDEBAR */}
-      <aside className="sidebar">
+      <button className="hamburger" onClick={() => setSidebarOpen(true)}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="3" y1="6"  x2="21" y2="6"  />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar__top">
           <div className="sidebar__brand">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -63,6 +82,7 @@ export default function App() {
             MyTodo
           </div>
           <p className="sidebar__user">@{user.username}</p>
+          <button className="sidebar__close" onClick={() => setSidebarOpen(false)}>x</button>
         </div>
 
         <div className="sidebar__section-label">My Lists</div>
@@ -72,7 +92,7 @@ export default function App() {
             <li key={list.id}>
               <button
                 className={`sidebar__list-item ${activeList === list.id ? 'active' : ''}`}
-                onClick={() => setActiveList(list.id)}
+                onClick={() => handleSelectList(list.id)}
                 style={{ '--list-color': list.color }}
               >
                 <span className="sidebar__list-icon">{list.icon}</span>
@@ -83,13 +103,12 @@ export default function App() {
                   className="sidebar__list-delete"
                   onClick={() => handleDeleteList(list.id)}
                   title="Delete list"
-                >×</button>
+                >x</button>
               )}
             </li>
           ))}
         </ul>
 
-        {/* New list */}
         {showNewList ? (
           <div className="sidebar__new-list">
             <input
@@ -120,7 +139,6 @@ export default function App() {
         </button>
       </aside>
 
-      {/* MAIN */}
       <main className="main-content">
         {activeList && (
           <TodoApp
