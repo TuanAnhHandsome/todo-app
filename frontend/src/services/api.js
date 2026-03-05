@@ -1,27 +1,13 @@
 // ============================================================
-//  api.js — Service layer
-//  Hiện tại dùng localStorage (mock).
-//  Khi có Spring Boot, chỉ cần bỏ comment phần API
-//  và xóa phần localStorage bên dưới.
+//  api.js — Service layer (mock localStorage)
+//  Khi có Spring Boot, bỏ comment phần fetch() và xóa mock
 // ============================================================
 
 const BASE_URL = 'http://localhost:8080/api';
 
-// ---------- AUTH ----------
+// ── AUTH ────────────────────────────────────────────────────
 
 export async function login(username, password) {
-  // --- Spring Boot ---
-  // const res = await fetch(`${BASE_URL}/auth/login`, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ username, password }),
-  // });
-  // if (!res.ok) throw new Error('Invalid credentials');
-  // const data = await res.json();
-  // localStorage.setItem('token', data.token);
-  // return data.user;
-
-  // --- Mock ---
   const users = JSON.parse(localStorage.getItem('users') || '[]');
   const user  = users.find(u => u.username === username && u.password === password);
   if (!user) throw new Error('Sai tên đăng nhập hoặc mật khẩu');
@@ -30,16 +16,6 @@ export async function login(username, password) {
 }
 
 export async function register(username, password) {
-  // --- Spring Boot ---
-  // const res = await fetch(`${BASE_URL}/auth/register`, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ username, password }),
-  // });
-  // if (!res.ok) throw new Error('Username already exists');
-  // return res.json();
-
-  // --- Mock ---
   const users = JSON.parse(localStorage.getItem('users') || '[]');
   if (users.find(u => u.username === username)) {
     throw new Error('Tên đăng nhập đã tồn tại');
@@ -51,80 +27,79 @@ export async function register(username, password) {
   return user;
 }
 
-export function logout() {
-  localStorage.removeItem('currentUser');
-  // localStorage.removeItem('token');
-}
-
+export function logout() { localStorage.removeItem('currentUser'); }
 export function getCurrentUser() {
   const u = localStorage.getItem('currentUser');
   return u ? JSON.parse(u) : null;
 }
 
-// ---------- TODOS ----------
+// ── LISTS ───────────────────────────────────────────────────
 
-function getKey(userId) {
-  return `todos_${userId}`;
+function listKey(userId) { return `lists_${userId}`; }
+
+export async function getLists(userId) {
+  const stored = localStorage.getItem(listKey(userId));
+  if (stored) return JSON.parse(stored);
+  // Default lists
+  const defaults = [
+    { id: 'personal', name: 'Personal',  icon: '👤', color: '#6366f1' },
+    { id: 'work',     name: 'Work',      icon: '💼', color: '#f59e0b' },
+    { id: 'study',    name: 'Study',     icon: '📚', color: '#10b981' },
+  ];
+  localStorage.setItem(listKey(userId), JSON.stringify(defaults));
+  return defaults;
 }
+
+export async function createList(userId, name, icon = '📁', color = '#6366f1') {
+  const lists  = await getLists(userId);
+  const newList = { id: `list_${Date.now()}`, name, icon, color };
+  lists.push(newList);
+  localStorage.setItem(listKey(userId), JSON.stringify(lists));
+  return newList;
+}
+
+export async function deleteList(userId, listId) {
+  let lists = await getLists(userId);
+  lists = lists.filter(l => l.id !== listId);
+  localStorage.setItem(listKey(userId), JSON.stringify(lists));
+  // Xóa todos thuộc list đó
+  let todos = await getTodos(userId);
+  todos = todos.filter(t => t.listId !== listId);
+  localStorage.setItem(todoKey(userId), JSON.stringify(todos));
+}
+
+// ── TODOS ───────────────────────────────────────────────────
+
+function todoKey(userId) { return `todos_${userId}`; }
 
 export async function getTodos(userId) {
-  // --- Spring Boot ---
-  // const res = await fetch(`${BASE_URL}/todos`, {
-  //   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-  // });
-  // return res.json();
-
-  // --- Mock ---
-  return JSON.parse(localStorage.getItem(getKey(userId)) || '[]');
+  return JSON.parse(localStorage.getItem(todoKey(userId)) || '[]');
 }
 
-export async function addTodo(userId, text) {
-  // --- Spring Boot ---
-  // const res = await fetch(`${BASE_URL}/todos`, {
-  //   method: 'POST',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //     Authorization: `Bearer ${localStorage.getItem('token')}`,
-  //   },
-  //   body: JSON.stringify({ text }),
-  // });
-  // return res.json();
-
-  // --- Mock ---
-  const todos  = await getTodos(userId);
-  const newTodo = { id: Date.now(), text, completed: false, createdAt: new Date().toISOString() };
+export async function addTodo(userId, { text, priority = 'medium', deadline = null, listId = 'personal' }) {
+  const todos   = await getTodos(userId);
+  const newTodo = {
+    id:        Date.now(),
+    text,
+    completed: false,
+    priority,             // 'high' | 'medium' | 'low'
+    deadline,             // ISO string hoặc null
+    listId,
+    createdAt: new Date().toISOString(),
+  };
   todos.unshift(newTodo);
-  localStorage.setItem(getKey(userId), JSON.stringify(todos));
+  localStorage.setItem(todoKey(userId), JSON.stringify(todos));
   return newTodo;
 }
 
 export async function updateTodo(userId, id, changes) {
-  // --- Spring Boot ---
-  // const res = await fetch(`${BASE_URL}/todos/${id}`, {
-  //   method: 'PUT',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //     Authorization: `Bearer ${localStorage.getItem('token')}`,
-  //   },
-  //   body: JSON.stringify(changes),
-  // });
-  // return res.json();
-
-  // --- Mock ---
   let todos = await getTodos(userId);
   todos = todos.map(t => t.id === id ? { ...t, ...changes } : t);
-  localStorage.setItem(getKey(userId), JSON.stringify(todos));
+  localStorage.setItem(todoKey(userId), JSON.stringify(todos));
 }
 
 export async function deleteTodo(userId, id) {
-  // --- Spring Boot ---
-  // await fetch(`${BASE_URL}/todos/${id}`, {
-  //   method: 'DELETE',
-  //   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-  // });
-
-  // --- Mock ---
   let todos = await getTodos(userId);
   todos = todos.filter(t => t.id !== id);
-  localStorage.setItem(getKey(userId), JSON.stringify(todos));
+  localStorage.setItem(todoKey(userId), JSON.stringify(todos));
 }
