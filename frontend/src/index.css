@@ -1,0 +1,500 @@
+/* ============================================================
+   Todo App — index.css
+   Theme: Clean minimal, warm off-white, sharp ink
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+
+/* ---------- RESET ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ---------- VARIABLES ---------- */
+:root {
+  --bg:          #f5f4f0;
+  --surface:     #ffffff;
+  --line:        #e9e7e2;
+  --line-dark:   #d4d0c8;
+  --ink:         #1c1c1c;
+  --ink-2:       #5a5750;
+  --ink-3:       #9e9b95;
+  --accent:      #1c1c1c;
+  --accent-done: #4caf7d;
+  --red:         #e05252;
+
+  --font-ui:      'Figtree', system-ui, sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+
+  --radius:  6px;
+  --radius-s: 4px;
+  --shadow:  0 2px 16px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+  --ease:    cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ---------- BASE ---------- */
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input  { font-family: inherit; }
+
+::selection { background: var(--ink); color: var(--bg); }
+
+/* ============================================================
+   AUTH PAGE
+   ============================================================ */
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+
+  /* Dot grid */
+  background-image: radial-gradient(circle, var(--line-dark) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.auth-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 48px 40px 40px;
+  width: 100%;
+  max-width: 400px;
+  animation: fadeUp 0.5s var(--ease) both;
+}
+
+.auth-logo {
+  width: 48px; height: 48px;
+  background: var(--ink);
+  color: white;
+  border-radius: var(--radius-s);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.auth-sub {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  margin-bottom: 32px;
+}
+
+/* Form */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.field input {
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--bg);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  outline: none;
+}
+
+.field input:focus {
+  border-color: var(--ink);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(28,28,28,0.07);
+}
+
+.auth-error {
+  font-size: 0.8rem;
+  color: var(--red);
+  padding: 10px 14px;
+  background: rgba(224, 82, 82, 0.07);
+  border-radius: var(--radius-s);
+  border-left: 3px solid var(--red);
+}
+
+.btn-submit {
+  margin-top: 4px;
+  padding: 12px;
+  background: var(--ink);
+  color: white;
+  border-radius: var(--radius-s);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.btn-submit:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-switch {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.auth-switch button {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: inherit;
+}
+
+/* ============================================================
+   TODO APP
+   ============================================================ */
+.app-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 24px 80px;
+  background: var(--bg);
+  background-image: radial-gradient(circle, var(--line-dark) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.app-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 580px;
+  overflow: hidden;
+  animation: fadeUp 0.45s var(--ease) both;
+}
+
+/* ---------- App Header ---------- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-logo {
+  width: 40px; height: 40px;
+  background: var(--ink);
+  color: white;
+  border-radius: var(--radius-s);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.app-greeting {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  margin-top: 1px;
+}
+
+.app-greeting strong { color: var(--ink-2); font-weight: 500; }
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  padding: 7px 12px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--line);
+  transition: all 0.2s var(--ease);
+}
+
+.btn-logout:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+/* ---------- Add form ---------- */
+.add-form {
+  display: flex;
+  gap: 10px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.add-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.add-input:focus {
+  border-color: var(--ink);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(28,28,28,0.06);
+}
+
+.add-input::placeholder { color: var(--ink-3); }
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--ink);
+  color: white;
+  border-radius: var(--radius-s);
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: opacity 0.2s, transform 0.2s var(--ease);
+  white-space: nowrap;
+}
+
+.add-btn:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.add-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ---------- Filter bar ---------- */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.filter-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  transition: all 0.18s var(--ease);
+  border: 1px solid transparent;
+}
+
+.filter-tab:hover { color: var(--ink); }
+
+.filter-tab--active {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+}
+
+.filter-count {
+  font-size: 0.7rem;
+  background: rgba(255,255,255,0.2);
+  padding: 1px 6px;
+  border-radius: 99px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.filter-tab:not(.filter-tab--active) .filter-count {
+  background: var(--line);
+  color: var(--ink-2);
+}
+
+.btn-clear {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.18s;
+}
+
+.btn-clear:hover { color: var(--red); }
+
+/* ---------- Todo list ---------- */
+.todo-list {
+  list-style: none;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s var(--ease);
+  animation: slideIn 0.25s var(--ease) both;
+}
+
+.todo-item:last-child { border-bottom: none; }
+.todo-item:hover { background: #fafaf7; }
+
+/* Checkbox */
+.todo-check {
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--line-dark);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s var(--ease);
+  color: white;
+}
+
+.todo-check:hover { border-color: var(--ink); }
+
+.todo-item--done .todo-check {
+  background: var(--accent-done);
+  border-color: var(--accent-done);
+}
+
+/* Text */
+.todo-text {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.todo-item--done .todo-text {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--line-dark);
+}
+
+/* Edit input */
+.todo-edit-input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-s);
+  font-size: 0.9rem;
+  color: var(--ink);
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(28,28,28,0.06);
+}
+
+/* Action buttons */
+.todo-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s var(--ease);
+}
+
+.todo-item:hover .todo-actions { opacity: 1; }
+
+.todo-btn {
+  width: 28px; height: 28px;
+  border-radius: var(--radius-s);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  transition: all 0.15s var(--ease);
+}
+
+.todo-btn--edit:hover  { background: var(--line); color: var(--ink); }
+.todo-btn--delete:hover { background: rgba(224,82,82,0.1); color: var(--red); }
+
+/* Empty state */
+.todo-empty {
+  padding: 48px 28px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 0.88rem;
+}
+
+/* App footer */
+.app-footer {
+  padding: 12px 28px;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+  text-align: right;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 480px) {
+  .auth-card { padding: 36px 24px 28px; }
+  .app-header, .add-form, .filter-bar { padding-left: 20px; padding-right: 20px; }
+  .todo-item { padding-left: 20px; padding-right: 20px; }
+  .app-footer { padding-left: 20px; padding-right: 20px; }
+  .filter-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
