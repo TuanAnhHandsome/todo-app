@@ -3,6 +3,7 @@
 // ============================================================
 
 const BASE_URL = 'https://todo-app-production-7525.up.railway.app/api';
+
 // ── Helper: lấy token từ localStorage ───────────────────────
 function authHeader() {
   const token = localStorage.getItem('token');
@@ -14,7 +15,6 @@ async function handleResponse(res) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || 'Something went wrong');
   }
-  // 204 No Content không có body
   if (res.status === 204) return null;
   return res.json();
 }
@@ -53,51 +53,34 @@ export function logout() {
 export function getCurrentUser() {
   const u = localStorage.getItem('currentUser');
   const token = localStorage.getItem('token');
-
-  // Nếu không có cả 2 → chưa đăng nhập
   if (!u || !token) return null;
-
   return JSON.parse(u);
 }
 
 // ── LISTS ───────────────────────────────────────────────────
-// Backend lưu listId trong todos, frontend quản lý list metadata
-// trong localStorage (tên, icon, màu) — chỉ listId đồng bộ với backend
 
-const LIST_META_KEY = (userId) => `list_meta_${userId}`;
-
-export async function getLists(userId) {
-  // Lấy metadata từ localStorage
-  const stored = localStorage.getItem(LIST_META_KEY(userId));
-  const meta = stored ? JSON.parse(stored) : null;
-
-  if (meta) return meta;
-
-  // Lần đầu: tạo defaults
-  const defaults = [
-    { id: 'personal', name: 'Personal', icon: '👤', color: '#6366f1' },
-    { id: 'work', name: 'Work', icon: '💼', color: '#f59e0b' },
-    { id: 'study', name: 'Study', icon: '📚', color: '#10b981' },
-  ];
-  localStorage.setItem(LIST_META_KEY(userId), JSON.stringify(defaults));
-  return defaults;
+export async function getLists() {
+  const res = await fetch(`${BASE_URL}/lists`, {
+    headers: { ...authHeader() },
+  });
+  return handleResponse(res);
 }
 
 export async function createList(userId, name, icon = '📁', color = '#6366f1') {
-  const lists = await getLists(userId);
-  const newList = { id: `list_${Date.now()}`, name, icon, color };
-  lists.push(newList);
-  localStorage.setItem(LIST_META_KEY(userId), JSON.stringify(lists));
-  return newList;
+  const res = await fetch(`${BASE_URL}/lists`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeader() },
+    body: JSON.stringify({ name, icon, color }),
+  });
+  return handleResponse(res);
 }
 
 export async function deleteList(userId, listId) {
-  // Xóa metadata
-  let lists = await getLists(userId);
-  lists = lists.filter(l => l.id !== listId);
-  localStorage.setItem(LIST_META_KEY(userId), JSON.stringify(lists));
-
-  // Xóa tất cả todos thuộc list đó trên backend
+  await fetch(`${BASE_URL}/lists/${listId}`, {
+    method: 'DELETE',
+    headers: { ...authHeader() },
+  });
+  // Xóa todos thuộc list đó
   await fetch(`${BASE_URL}/todos/list/${listId}`, {
     method: 'DELETE',
     headers: { ...authHeader() },

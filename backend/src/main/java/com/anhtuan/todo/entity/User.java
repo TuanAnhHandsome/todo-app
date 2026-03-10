@@ -30,6 +30,10 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Todo> todos;
 
+    @ToString.Exclude
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<UserList> lists;
+
     @PrePersist
     void prePersist() {
         this.createdAt = LocalDateTime.now();
