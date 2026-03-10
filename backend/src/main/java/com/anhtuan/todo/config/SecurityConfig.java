@@ -30,33 +30,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-            // Tắt CSRF (dùng JWT nên không cần)
-            .csrf(AbstractHttpConfigurer::disable)
+                // Tắt CSRF (dùng JWT nên không cần)
+                .csrf(AbstractHttpConfigurer::disable)
 
-            // Bật CORS (cho React gọi từ localhost:5173)
-            .cors(cors -> cors.configurationSource(corsConfig()))
+                // Bật CORS (cho React gọi từ localhost:5173)
+                .cors(cors -> cors.configurationSource(corsConfig()))
 
-            // Stateless session (không dùng session của Spring)
-            .sessionManagement(s ->
-                s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Stateless session (không dùng session của Spring)
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-            // Quy tắc phân quyền
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()   // login/register không cần token
-                .anyRequest().authenticated()                  // còn lại cần token
-            )
+                // Quy tắc phân quyền
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll() // login/register không cần token
+                        .anyRequest().authenticated() // còn lại cần token
+                )
 
-            // Thêm JWT filter trước UsernamePasswordAuthenticationFilter
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                // Thêm JWT filter trước UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 
-            .build();
+                .build();
     }
 
     // CORS: cho phép React (localhost:5173) gọi API
     @Bean
     public CorsConfigurationSource corsConfig() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://todo-app-amber-six-78.vercel.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -73,7 +74,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-        throws Exception {
+            throws Exception {
         return config.getAuthenticationManager();
     }
 }
