@@ -1,5 +1,6 @@
 package com.anhtuan.todo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -24,16 +25,13 @@ public class Todo {
     @Builder.Default
     private boolean completed = false;
 
-    // 'high' | 'medium' | 'low'
     @Column(nullable = false, length = 10)
     @Builder.Default
     private String priority = "medium";
 
-    // Deadline (nullable)
     @Column(name = "deadline")
     private LocalDate deadline;
 
-    // List ID (ví dụ: 'personal', 'work', 'study', hoặc custom id)
     @Column(name = "list_id", length = 50)
     @Builder.Default
     private String listId = "personal";
@@ -44,6 +42,7 @@ public class Todo {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @JsonIgnore
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
