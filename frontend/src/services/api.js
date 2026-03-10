@@ -2,8 +2,7 @@
 //  api.js — connected to Spring Boot backend
 // ============================================================
 
-const BASE_URL = 'http://localhost:8080/api';
-
+const BASE_URL = 'https://todo-app-production-7525.up.railway.app/api';
 // ── Helper: lấy token từ localStorage ───────────────────────
 function authHeader() {
   const token = localStorage.getItem('token');
